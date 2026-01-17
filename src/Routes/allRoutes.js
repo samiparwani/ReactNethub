@@ -6,6 +6,14 @@ import DashboardAnalytics from "../pages/DashboardAnalytics";
 import DashboardCrm from "../pages/DashboardCrm";
 import DashboardEcommerce from "../pages/DashboardEcommerce";
 
+
+// // New Product Pages by sami
+// import ProductsList from "../pages/Products/ProductsList";
+// import ProductCreate from "../pages/Products/ProductCreate";
+// import ProductEdit from "../pages/Products/ProductEdit";
+// import ProductView from "../pages/Products/ProductView"; // Create this similarly
+
+
 import DashboardCrypto from "../pages/DashboardCrypto";
 import DashboardProject from "../pages/DashboardProject";
 import DashboardNFT from "../pages/DashboardNFT";

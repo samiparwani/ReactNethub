@@ -3,3 +3,22 @@ npm install --force
 npm view react-apexcharts peerDependencies
 npm start
 
+Step 1:
+
+pages/Products/ all pages
+
+Step 2: Add Axios Setup
+
+Create src/api/axiosConfig.js:
+
+
+
+Step 3: 
+Update Routes Configuration
+Update allRoutes.js:
+
+
+Step 4: 
+Create Login Component for Laravel Backend
+pages/Authentication/Login.js
+

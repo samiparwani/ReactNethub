@@ -1,0 +1,114 @@
+/* Reset margins and padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Import Bootstrap CSS */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-end-rgb));
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Fix container issues */
+.container-scroller {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.page-body-wrapper {
+  min-height: calc(100vh - 70px);
+  padding-top: 70px;
+  display: flex;
+  width: 100%;
+}
+
+.main-panel {
+  flex: 1;
+  width: 100%;
+  transition: width 0.25s ease, margin 0.25s ease;
+}
+
+/* Content wrapper styling */
+.content-wrapper {
+  padding: 1.5rem;
+  width: 100%;
+  flex-grow: 1;
+  background-color: #f5f7fb;
+}
+
+/* Fix sidebar width */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
+  background: #1e1e2d;
+  transition: width 0.25s ease, transform 0.25s ease;
+}
+
+.sidebar-icon-only .sidebar {
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+}
+
+/* Fix navbar position */
+.navbar {
+  z-index: 999;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+/* Fix footer */
+.footer {
+  padding: 20px;
+  background: #fff;
+  border-top: 1px solid #e4e4e4;
+  margin-top: auto;
+}
+
+/* Card styling */
+.card {
+  border: 1px solid #e4e4e4;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .page-body-wrapper {
+    padding-top: 60px;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 1000;
+  }
+  
+  .sidebar-offcanvas.active {
+    transform: translateX(0);
+  }
+  
+  .main-panel {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+}

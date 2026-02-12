@@ -56,11 +56,17 @@ const Dashboard: React.FC = () =>{
         }
     }
     // fORM sUBMISSION
-    const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleFormSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
         try{
-            
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, formData, {
+                headers:{
+                    Authorization: `Bearer ${authToken}`,
+                    "Content-Type": "multipart/form-data"
+                }
+            })
+            console.log(response)
         }catch (error){
             console.log(error)
         }

@@ -13,7 +13,7 @@ class AuthController extends Controller
         $data = $request->validate([
             "name" => "required|string",
             "email" => "required|email|unique:users,email",
-            "password" => "required"
+            "password" => "required|confirmed"
         ]);
         User::create($data);
         return response()->json([
@@ -21,26 +21,30 @@ class AuthController extends Controller
             "message" => "User registered successfuly",
         ]);
     }
-    // Login API (email, password)
-    public function login(Request $request){
-        $request->validate([
-            "email" => "required|email",
-            "password" => "required"
+// Login API (email, password)
+public function login(Request $request){
+    $request->validate([
+        "email" => "required|email",
+        "password" => "required"
+    ]);
+    
+    if(!Auth::attempt($request->only("email", "password"))){
+        return response()->json([
+            "status" => false,
+            "message" => "Invalid Credentials"
         ]);
-        if(!Auth::attempt($request->only("email", "password"))){
-            return response()->json([
-                "status" => false,
-                "message" => "Invalid Credentials"
-            ]);
-            $user = Auth::user();
-            $token = $user->createToken("myToken")->plainTextToken;
-            return response()->json([
-                "status" => true,
-                "message" => "User Logged In",
-                "token" => $token
-            ]);
-        }
     }
+    
+    // This code was unreachable - fixed now
+    $user = Auth::user();
+    $token = $user->createToken("myToken")->plainTextToken;
+    
+    return response()->json([
+        "status" => true,
+        "message" => "User Logged In",
+        "token" => $token
+    ]);
+}
 
     //Profile API
     public function profile(){

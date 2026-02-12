@@ -1,7 +1,71 @@
-import React from "react";
+"use client"
+
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { myAppHook } from "@/context/AppProvider";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import toast from "react-hot-toast";
+import Swal from "sweetalert2";
+
+interface ProductType {
+    title: string,
+    description: string,
+    cost: number,
+    file: File | null,
+    bannerURL: string | ""
+}
 const Dashboard: React.FC = () =>{
+
+    const { isLoading, authToken } = myAppHook();
+    const router = useRouter();
+    const fileRef = React.useRef<HTMLInputElement>(null)
+    const [ formData, setFormData] = useState<ProductType>({
+        title: "",
+        description: "",
+        cost: 0,
+        file: null,
+        bannerURL: ""
+
+    })
+    useEffect(() =>{
+        if(!authToken){
+            router.push('/auth')
+            return
+        }        
+    }, [authToken])
+
+
+    const handleOnChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if(event.target.files){
+
+            // File uploaded
+            setFormData({
+                ...formData,
+                file: event.target.files[0],
+                bannerURL: URL.createObjectURL(event.target.files[0])
+            })
+        }else{
+
+            setFormData({
+            // No file uploaded
+            ...formData,
+            [event.target.name]: event.target.value
+            });
+        }
+    }
+    // fORM sUBMISSION
+    const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        
+        try{
+            
+        }catch (error){
+            console.log(error)
+        }
+ 
+    }
     return <>
         <div className="container mt-4">
         <div className="row">
@@ -9,21 +73,38 @@ const Dashboard: React.FC = () =>{
             <div className="col-md-6">
                 <div className="card p-4">
                     <h4>Add Product</h4>
-                    <form>
-                        <input className="form-control mb-2" name="title" placeholder="Title" required />
-                        <input className="form-control mb-2" name="description" placeholder="Description" required />
-                        <input className="form-control mb-2" name="cost" placeholder="Cost" type="number" required />
+                    <form onSubmit={ handleFormSubmit }>
+                        <input className="form-control mb-2" 
+                        value={ formData.title}
+                        onChange={ handleOnChangeEvent }
+                        name="title" placeholder="Title" required />
+                        <input className="form-control mb-2" 
+                        value={ formData.description}
+                        onChange={ handleOnChangeEvent }
+                        name="description" placeholder="Description" required />
+                        <input className="form-control mb-2" 
+                        value={ formData.cost}
+                        onChange={ handleOnChangeEvent }
+                        name="cost" placeholder="Cost" type="number" required />
                        <div className="mb-2">
+                        {
+                            formData.bannerURL && (
   <Image
-    src="/placeholder.png"
+    src={ formData.bannerURL}
     alt="Preview"
     id="bannerPreview"
     width={100}
     height={100}
     style={{ display: "none" }}
   />
+                            )
+                        }
+
 </div>
-                        <input className="form-control mb-2" type="file" id="bannerInput" />
+                        <input className="form-control mb-2"
+                        ref={ fileRef}
+                        onChange={ handleOnChangeEvent }
+                        type="file" id="bannerInput" />
                         <button className="btn btn-primary" type="submit">Add Product</button>
                     </form>
                 </div>

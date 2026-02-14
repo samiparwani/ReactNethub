@@ -14,10 +14,13 @@ class ProductController extends Controller
     public function index()
     {
         $userID = auth()->user()->id;
-        $products = Product::where("user_id", $userID)->get();
+        $products = Product::where("user_id", $userID)->get()->map(function($product){
+            $product->banner_image = $product->banner_image ? asset('storage/'.$product->banner_image) : null;
+            return $product;
+        });
         return response()->json([
             "status" => true,
-            "proucts" => $products
+            "products" => $products
         ]);
     }
 
@@ -28,8 +31,6 @@ class ProductController extends Controller
     {
          $data = $request->validate([
             "title" => "required",
-            // "email" => "required|email|unique:users,email",
-            // "password" => "required"
         ]);
 
         $data['description'] = $request->description;
@@ -64,9 +65,11 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $data = $request->validate([
             "title" => "required"
         ]);
+        $data['description'] = isset($request->description ) ? $request->description : $product->description;
+        $data['cost'] = isset($request->cost ) ? $request->cost : $product->cost;
          if($request->hasFile("banner_image")){
             if($product->banner_image){
                 Storage::disk("public")->delete($product->banner_image);

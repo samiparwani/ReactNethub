@@ -31,7 +31,11 @@ class ProductController extends Controller
             // "email" => "required|email|unique:users,email",
             // "password" => "required"
         ]);
+
+        $data['description'] = $request->description;
+        $data['cost'] = $request->cost;
         $data['user_id'] = auth()->user()->id;
+
         if($request->hasFile("banner_image")){
             
             $data["banner_image"] = $request->file('banner_image')->store("products", 'public');

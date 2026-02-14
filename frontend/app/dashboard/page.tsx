@@ -13,8 +13,8 @@ interface ProductType {
     title: string,
     description: string,
     cost: number,
-    file: File | null,
-    bannerURL: string | ""
+    file: String,
+    banner_image: File | null
 }
 const Dashboard: React.FC = () =>{
 
@@ -25,8 +25,8 @@ const Dashboard: React.FC = () =>{
         title: "",
         description: "",
         cost: 0,
-        file: null,
-        bannerURL: ""
+        file: "",
+        banner_image: null
 
     })
     useEffect(() =>{
@@ -43,8 +43,8 @@ const Dashboard: React.FC = () =>{
             // File uploaded
             setFormData({
                 ...formData,
-                file: event.target.files[0],
-                bannerURL: URL.createObjectURL(event.target.files[0])
+                banner_image: event.target.files[0],
+                file: URL.createObjectURL(event.target.files[0])
             })
         }else{
 
@@ -66,6 +66,19 @@ const Dashboard: React.FC = () =>{
                     "Content-Type": "multipart/form-data"
                 }
             })
+            if(response.data.status){
+                toast.success(response.data.message)
+                setFormData({
+                    title: "",
+        description: "",
+        cost: 0,
+        file: "",
+        banner_image: null
+                });
+                if(fileRef.current){
+                    fileRef.current.value = "";
+                }
+            }
             console.log(response)
         }catch (error){
             console.log(error)
@@ -94,14 +107,14 @@ const Dashboard: React.FC = () =>{
                         name="cost" placeholder="Cost" type="number" required />
                        <div className="mb-2">
                         {
-                            formData.bannerURL && (
+                            formData.file && (
   <Image
-    src={ formData.bannerURL}
+    src={ formData.file}
     alt="Preview"
     id="bannerPreview"
     width={100}
     height={100}
-    style={{ display: "none" }}
+    
   />
                             )
                         }

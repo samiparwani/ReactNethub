@@ -21,3 +21,4 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+frontend/public/assets/js/pages/leaflet-map.init.js

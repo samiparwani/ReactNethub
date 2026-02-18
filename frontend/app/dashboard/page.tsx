@@ -1,132 +1,40 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { myAppHook } from "@/context/AppProvider";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import toast from "react-hot-toast";
-import Swal from "sweetalert2";
-import { Console } from "console";
+import MainLayout from "@/components/template/layout/MainLayout";
+import Loader from "@/components/Loader";
+import Link from "next/link";
+import Image from "next/image";
 
-interface ProductType {
-    id?: number,
-    title: string,
-    description?: string,
-    cost?: number,
-    file?: String,
-    banner_image?: File | null
+interface DashboardStats {
+    totalProducts: number;
+    recentProducts: any[];
+    loading: boolean;
 }
-const Dashboard: React.FC = () => {
 
-    const { isLoading, authToken } = myAppHook();
+export default function DashboardPage() {
+    const { authToken } = myAppHook();
     const router = useRouter();
-    const fileRef = React.useRef<HTMLInputElement>(null)
-    const [products, setProducts] = useState<ProductType[]>([])
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-    const [formData, setFormData] = useState<ProductType>({
-        title: "",
-        description: "",
-        cost: 0,
-        file: "",
-        banner_image: null
+    const [stats, setStats] = useState<DashboardStats>({
+        totalProducts: 0,
+        recentProducts: [],
+        loading: true
+    });
 
-    })
     useEffect(() => {
         if (!authToken) {
-            router.push('/auth')
-            return
+            router.push('/auth');
+            return;
         }
-        fetchAllProducts();
-    }, [authToken])
+        fetchDashboardData();
+    }, [authToken]);
 
-
-    const handleOnChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-
-            // File uploaded
-            setFormData({
-                ...formData,
-                banner_image: event.target.files[0],
-                file: URL.createObjectURL(event.target.files[0])
-            })
-        } else {
-
-            setFormData({
-                // No file uploaded
-                ...formData,
-                [event.target.name]: event.target.value
-            });
-        }
-    }
-    // fORM sUBMISSION
-    const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
+    const fetchDashboardData = async () => {
         try {
-            if (isEdit) {
-                //Edit Operation
-
-                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products/${formData.id}`, {
-                    ...formData,
-                    "_method": "PUT"
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                        "Content-Type": "multipart/form-data"
-                    }
-
-
-                })
-                if (response.data.status) {
-                    toast.success(response.data.message)
-                    setFormData({
-                        title: "",
-                        description: "",
-                        cost: 0,
-                        file: "",
-                        banner_image: null
-                    });
-                    if (fileRef.current) {
-                        fileRef.current.value = "";
-                    }
-                }
-                fetchAllProducts();
-
-            } else {
-                // Add Operation
-                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${authToken}`,
-                        "Content-Type": "multipart/form-data"
-                    }
-                })
-                if (response.data.status) {
-                    toast.success(response.data.message)
-                    setFormData({
-                        title: "",
-                        description: "",
-                        cost: 0,
-                        file: "",
-                        banner_image: null
-                    });
-                    if (fileRef.current) {
-                        fileRef.current.value = "";
-                    }
-                }
-                fetchAllProducts();
-            }
-
-        } catch (error) {
-            console.log(error)
-        }
-
-    }
-
-    const fetchAllProducts = async () => {
-        try {
-            const response = await axios.get(
+            const productsResponse = await axios.get(
                 `${process.env.NEXT_PUBLIC_API_URL}/products`,
                 {
                     headers: {
@@ -134,161 +42,255 @@ const Dashboard: React.FC = () => {
                     },
                 }
             );
-
-            console.log(response.data); // inspect structure
-
-            setProducts(response.data.products ?? response.data ?? []);
-
+            
+            const products = productsResponse.data.products ?? productsResponse.data ?? [];
+            
+            setStats({
+                totalProducts: products.length,
+                recentProducts: products.slice(0, 5),
+                loading: false
+            });
         } catch (error) {
             console.log(error);
-            setProducts([]); // fallback
+            setStats(prev => ({ ...prev, loading: false }));
         }
     };
 
-    const handleDeleteProduct = async (id: number) => {
-
-        Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!"
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
-                        headers: {
-                            Authorization: `Bearer ${authToken}`,
-                        }
-                    })
-                    if (response.data.status) {
-                        // toast.success(response.data.message)
-                        Swal.fire({
-                            title: "Deleted!",
-                            text: "Your file has been deleted.",
-                            icon: "success"
-                        });
-                        fetchAllProducts()
-                    }
-                } catch (error) {
-                    console.log(error);
-                }
-
-            }
-        });
-
+    if (stats.loading) {
+        return <Loader />;
     }
-    return <>
-        <div className="container mt-4">
+
+    return (
+        <MainLayout title="Dashboard">
+            {/* Page Title */}
             <div className="row">
+                <div className="col-12">
+                    <div className="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 className="mb-sm-0">Dashboard</h4>
+                        <div className="page-title-right">
+                            <ol className="breadcrumb m-0">
+                                <li className="breadcrumb-item active">Dashboard</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div className="col-md-6">
-                    <div className="card p-4">
-                        <h4>{isEdit ? "Edit" : "Add"} Product</h4>
-                        <form onSubmit={handleFormSubmit}>
-                            <input className="form-control mb-2"
-                                value={formData.title}
-                                onChange={handleOnChangeEvent}
-                                name="title" placeholder="Title" required />
-                            <input className="form-control mb-2"
-                                value={formData.description}
-                                onChange={handleOnChangeEvent}
-                                name="description" placeholder="Description" required />
-                            <input className="form-control mb-2"
-                                value={formData.cost}
-                                onChange={handleOnChangeEvent}
-                                name="cost" placeholder="Cost" type="number" required />
-                            <div className="mb-2">
-                                {
-                                    formData.file && (
-                                        <img
-                                            src={formData.file}
-                                            alt="Preview"
-                                            id="bannerPreview"
-                                            width={100}
-                                            height={100}
-
-                                        />
-
-                                    )
-                                }
-
+            {/* Welcome Card */}
+            <div className="row mb-4">
+                <div className="col-12">
+                    <div className="card bg-primary text-white">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="flex-shrink-0">
+                                    <div className="avatar-lg rounded-circle bg-white bg-opacity-25 p-2">
+                                        <i className="ri-user-3-line fs-1 text-white"></i>
+                                    </div>
+                                </div>
+                                <div className="flex-grow-1 ms-4">
+                                    <h2 className="text-white mb-2">Welcome back!</h2>
+                                    <p className="text-white-50 mb-0">Here's what's happening with your products today.</p>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <input className="form-control mb-2"
-                                ref={fileRef}
-                                onChange={handleOnChangeEvent}
-                                type="file" id="bannerInput" />
-                            <button className="btn btn-primary" type="submit">{isEdit ? "Update" : "Add"} Product</button>
-                        </form>
+            {/* Stats Cards */}
+            <div className="row">
+                <div className="col-xl-3 col-md-6">
+                    <div className="card card-animate">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center">
+                                <div className="avatar-sm flex-shrink-0">
+                                    <span className="avatar-title bg-primary-subtle text-primary rounded-2 fs-2">
+                                        <i className="ri-shopping-bag-line"></i>
+                                    </span>
+                                </div>
+                                <div className="flex-grow-1 ms-3">
+                                    <p className="text-uppercase fw-medium text-muted mb-2">Total Products</p>
+                                    <h4 className="mb-0">{stats.totalProducts.toLocaleString()}</h4>
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <Link href="/products" className="text-primary text-decoration-none">
+                                    View All Products <i className="ri-arrow-right-line align-bottom ms-1"></i>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <div className="col-xl-3 col-md-6">
+                    <div className="card card-animate">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center">
+                                <div className="avatar-sm flex-shrink-0">
+                                    <span className="avatar-title bg-success-subtle text-success rounded-2 fs-2">
+                                        <i className="ri-user-line"></i>
+                                    </span>
+                                </div>
+                                <div className="flex-grow-1 ms-3">
+                                    <p className="text-uppercase fw-medium text-muted mb-2">Active Users</p>
+                                    <h4 className="mb-0">1</h4>
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <span className="badge bg-success">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <div className="col-md-6">
-                    <table className="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Title</th>
-                                <th>Banner</th>
-                                <th>Cost</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.isArray(products) &&
-                                products.map((singleProduct) => (
-                                    <tr key={singleProduct.id}>
-                                        <td>{singleProduct.id}</td>
-                                        <td>{singleProduct.title}</td>
-                                        <td>
-                                            {singleProduct.banner_image ? (
-                                                <Image
-                                                    src={singleProduct.banner_image}
-                                                    alt={singleProduct.title}
-                                                    width={50}
-                                                    height={50}
-                                                    unoptimized
-                                                />
-                                            ) : (
-                                                <span>No Image</span>
-                                            )}
-                                        </td>
+                <div className="col-xl-3 col-md-6">
+                    <div className="card card-animate">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center">
+                                <div className="avatar-sm flex-shrink-0">
+                                    <span className="avatar-title bg-info-subtle text-info rounded-2 fs-2">
+                                        <i className="ri-time-line"></i>
+                                    </span>
+                                </div>
+                                <div className="flex-grow-1 ms-3">
+                                    <p className="text-uppercase fw-medium text-muted mb-2">Last Update</p>
+                                    <h4 className="mb-0">{new Date().toLocaleDateString('en-US')}</h4>
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <small className="text-muted">{new Date().toLocaleTimeString('en-US')}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                        <td>${singleProduct.cost}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() => {
-                                                    setFormData({
-                                                        id: singleProduct.id,
-                                                        title: singleProduct.title || "",
-                                                        description: singleProduct.description || "",
-                                                        cost: singleProduct.cost || 0,
-                                                        file: singleProduct.banner_image || "",
-                                                    })
-                                                    setIsEdit(true)
-                                                }}
-                                            >
-                                                Edit
-                                            </button>
-
-                                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteProduct(singleProduct.id)}>
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-
-                    </table>
+                <div className="col-xl-3 col-md-6">
+                    <div className="card card-animate">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center">
+                                <div className="avatar-sm flex-shrink-0">
+                                    <span className="avatar-title bg-warning-subtle text-warning rounded-2 fs-2">
+                                        <i className="ri-star-line"></i>
+                                    </span>
+                                </div>
+                                <div className="flex-grow-1 ms-3">
+                                    <p className="text-uppercase fw-medium text-muted mb-2">Quick Actions</p>
+                                    <h4 className="mb-0">
+                                        <Link href="/products" className="btn btn-sm btn-warning">
+                                            Add Product
+                                        </Link>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </>
-}
 
-export default Dashboard;
+            {/* Recent Products */}
+            <div className="row mt-4">
+                <div className="col-12">
+                    <div className="card">
+                        <div className="card-header d-flex align-items-center justify-content-between">
+                            <h5 className="card-title mb-0">Recent Products</h5>
+                            <Link href="/products" className="btn btn-sm btn-soft-primary">
+                                View All <i className="ri-arrow-right-line ms-1"></i>
+                            </Link>
+                        </div>
+                        <div className="card-body">
+                            <div className="table-responsive">
+                                <table className="table table-hover mb-0">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th style={{ width: "60px" }}>#</th>
+                                            <th style={{ width: "80px" }}>Image</th>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Price</th>
+                                            <th style={{ width: "120px" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {stats.recentProducts.length > 0 ? (
+                                            stats.recentProducts.map((product, index) => (
+                                                <tr key={product.id}>
+                                                    <td>{index + 1}</td>
+                                                    <td>
+                                                        {product.banner_image ? (
+                                                            <Image
+                                                                src={typeof product.banner_image === 'string' 
+                                                                    ? product.banner_image 
+                                                                    : "/assets/images/default-product.jpg"}
+                                                                alt={product.title}
+                                                                width={50}
+                                                                height={50}
+                                                                className="rounded"
+                                                                unoptimized
+                                                            />
+                                                        ) : (
+                                                            <div className="avatar-xs bg-light rounded d-flex align-items-center justify-content-center">
+                                                                <i className="ri-image-line text-muted"></i>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td>{product.title}</td>
+                                                    <td>
+                                                        <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                                                            {product.description || "No description"}
+                                                        </span>
+                                                    </td>
+                                                    <td>${product.cost?.toLocaleString()}</td>
+                                                    <td>
+                                                        <Link 
+                                                            href="/products" 
+                                                            className="btn btn-sm btn-soft-primary me-1"
+                                                        >
+                                                            <i className="ri-eye-line"></i>
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6} className="text-center py-4">
+                                                    <div className="text-muted">
+                                                        <i className="ri-inbox-line fs-1"></i>
+                                                        <p className="mt-2">No products found</p>
+                                                        <Link href="/products" className="btn btn-primary btn-sm">
+                                                            Add Your First Product
+                                                        </Link>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Tips */}
+            <div className="row mt-3">
+                <div className="col-12">
+                    <div className="card bg-light">
+                        <div className="card-body">
+                            <div className="d-flex align-items-center">
+                                <div className="flex-shrink-0">
+                                    <i className="ri-information-line fs-1 text-primary"></i>
+                                </div>
+                                <div className="flex-grow-1 ms-3">
+                                    <h5 className="mb-2">Quick Tips</h5>
+                                    <p className="text-muted mb-0">
+                                        Use the Products page to manage your inventory. You can add, edit, and delete products from there.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </MainLayout>
+    );
+}
